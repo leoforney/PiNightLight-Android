@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">PiNightLight</string>
+    <string name="ip">http://192.168.86.57</string>
+    <string name="token">bGVvZm9ybmV5OmRhcnlsZW8x</string>
+</resources>
