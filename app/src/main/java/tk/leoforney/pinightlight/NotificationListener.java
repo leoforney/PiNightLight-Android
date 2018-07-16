@@ -1,6 +1,7 @@
 package tk.leoforney.pinightlight;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
@@ -15,6 +16,7 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -59,6 +61,34 @@ public class NotificationListener extends NotificationListenerService {
                         .addHeader("Token", "bGVvZm9ybmV5OmRhcnlsZW8x")
                         .post(body)
                         .build();
+
+                String url = "https://api.lifx.com/v1/lights/id:d073d5348dac/effects/breathe?" +
+                        "color=" + appRecord.hex + "&" +
+                        "period=3&" +
+                        "cycles=1&" +
+                        "power_on=false";
+                Log.d("NLPiNightLight", url);
+
+                Request lifxRequest = new Request.Builder()
+                        .url(url)
+                        .addHeader("Authorization", String.format("Bearer %s", this.getResources().getString(R.string.lifx_token)))
+                        .post(RequestBody.create(MediaType.parse("text"), ""))
+                        .build();
+
+                client.newCall(lifxRequest).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        final String responseString = response.body().string();
+                        Log.d("NLPiNightLight", responseString);
+
+                    }
+                });
+
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
@@ -70,8 +100,10 @@ public class NotificationListener extends NotificationListenerService {
 
                     }
                 });
+
             }
         }
+
     }
 
     @Override

@@ -1,5 +1,6 @@
 package tk.leoforney.pinightlight;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,6 +14,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -35,6 +37,7 @@ import java.io.IOException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -42,7 +45,7 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Button colorPickerButton;
+    Button colorPickerButton, lifxButton;
     EditText ipEditText;
     SeekBar brightnessBar;
     TextView brightnessCurrent;
@@ -58,14 +61,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        ActivityCompat.requestPermissions(
+                this,
+                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
+                1
+        );
+
         client = new OkHttpClient();
 
-        if(!isNotificationServiceEnabled()){
+        if (!isNotificationServiceEnabled()) {
             enableNotificationListenerAlertDialog = buildNotificationServiceAlertDialog();
             enableNotificationListenerAlertDialog.show();
         }
 
         colorView = findViewById(R.id.colorView);
+        lifxButton = findViewById(R.id.lifx_button);
+        lifxButton.setOnClickListener(this);
+
         client.newCall(new Request.Builder()
                 .url(getRPIUrl() + "/color")
                 .get()
@@ -94,9 +106,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         brightnessCurrent = findViewById(R.id.brightnessCurrent);
         brightnessBar = findViewById(R.id.brightnessSeekbar);
         client.newCall(new Request.Builder()
-        .url(getRPIUrl() + "/brightness")
-        .get()
-        .build()).enqueue(new Callback() {
+                .url(getRPIUrl() + "/brightness")
+                .get()
+                .build()).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
 
@@ -179,6 +191,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.lifx_button:
+                Request request = new Request.Builder()
+                        .url("https://api.lifx.com/v1/lights/id:d073d5348dac/effects/breathe?" +
+                                "color=red&" +
+                                "period=3&" +
+                                "cycles=1&" +
+                                "power_on=false")
+                        .addHeader("Authorization", String.format("Bearer %s", this.getResources().getString(R.string.lifx_token)))
+                        .post(RequestBody.create(MediaType.parse("text"), ""))
+                        .build();
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        final String responseString = response.body().string();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Snackbar.make((findViewById(R.id.coordinatorLayout)), responseString, Snackbar.LENGTH_SHORT).show();
+                            }
+                        });
+
+                    }
+                });
+                //Log.d("NLPiNightLight", lifxResponse.getBody());
+                break;
             case R.id.colorPickerButton:
                 new ChromaDialog.Builder()
                         .initialColor(Color.DKGRAY)
@@ -246,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return ssid;
     }
 
-    private boolean isNotificationServiceEnabled(){
+    private boolean isNotificationServiceEnabled() {
         String pkgName = getPackageName();
         final String flat = Settings.Secure.getString(getContentResolver(),
                 ENABLED_NOTIFICATION_LISTENERS);
@@ -264,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-    private AlertDialog buildNotificationServiceAlertDialog(){
+    private AlertDialog buildNotificationServiceAlertDialog() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setTitle("Enable Notification Service");
         alertDialogBuilder.setMessage("Enable it bitch");
@@ -281,6 +323,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         // the app. will not work as expected
                     }
                 });
-        return(alertDialogBuilder.create());
+        return (alertDialogBuilder.create());
     }
 }

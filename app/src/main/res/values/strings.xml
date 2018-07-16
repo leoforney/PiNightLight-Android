@@ -2,4 +2,5 @@
     <string name="app_name">PiNightLight</string>
     <string name="ip">http://192.168.86.57</string>
     <string name="token">bGVvZm9ybmV5OmRhcnlsZW8x</string>
+    <string name="lifx_token">c5e8530351fe427c0a106784fc1dd65455324c50a8f0e0fc9ae02c3efb62f5c1</string>
 </resources>
