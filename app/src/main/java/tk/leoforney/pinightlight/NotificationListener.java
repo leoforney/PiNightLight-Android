@@ -1,7 +1,7 @@
 package tk.leoforney.pinightlight;
 
 import android.content.Intent;
-import android.content.res.Resources;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.service.notification.NotificationListenerService;
@@ -16,7 +16,6 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -41,6 +40,9 @@ public class NotificationListener extends NotificationListenerService {
         appRecords.add(new AppRecord("Messaging (Samsung)", "com.samsung.android.messaging", "#4c68d7"));
         appRecords.add(new AppRecord("Messaging (Google)", "com.google.android.apps.messaging", "#4c68d7"));
         appRecords.add(new AppRecord("Messaging (OnePlus)", "com.android.mms", "#4c68d7"));
+        appRecords.add(new AppRecord("Life360", "com.life360.android.safetymapd", "#aa0daa"));
+        appRecords.add(new AppRecord("MyQ", "com.chamberlain.myq.chamberlain", "#003478"));
+        appRecords.add(new AppRecord("Ring", "com.ringapp", "#1998d5"));
         return super.onBind(intent);
     }
 
@@ -63,7 +65,7 @@ public class NotificationListener extends NotificationListenerService {
                         .build();
 
                 String url = "https://api.lifx.com/v1/lights/id:d073d5348dac/effects/breathe?" +
-                        "color=" + appRecord.hex + "&" +
+                        "color=hue:" + hex2hue(appRecord.hex) + "&" +
                         "period=3&" +
                         "cycles=1&" +
                         "power_on=false";
@@ -119,5 +121,14 @@ public class NotificationListener extends NotificationListenerService {
             }
         }
         return returnValue;
+    }
+
+    public static String hex2hue(String colorStr) {
+        int r = Integer.valueOf(colorStr.substring(1, 3), 16);
+        int g = Integer.valueOf( colorStr.substring(3, 5),16);
+        int b = Integer.valueOf( colorStr.substring(5, 7),16);
+        float[] hsv = new float[3];
+        Color.colorToHSV(Color.rgb(r, g, b), hsv);
+        return String.valueOf(hsv[0]);
     }
 }

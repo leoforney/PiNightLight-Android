@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.lifx_button:
                 Request request = new Request.Builder()
                         .url("https://api.lifx.com/v1/lights/id:d073d5348dac/effects/breathe?" +
-                                "color=red&" +
+                                "color=hue:" + "2" + "&" +
                                 "period=3&" +
                                 "cycles=1&" +
                                 "power_on=false")
